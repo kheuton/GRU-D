@@ -1,8 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
-import keras
-from keras import backend as K
-from keras.layers import Masking
+from tensorflow.keras import backend as K
+from tensorflow.keras.layers import Masking
 
 
 __all__ = ['ExternalMasking']

@@ -1,12 +1,13 @@
 from __future__ import absolute_import, division, print_function
 
-from keras import backend as K
-from keras import constraints, initializers, regularizers
-from keras.engine import InputSpec, Layer
-from keras.layers.recurrent import _generate_dropout_mask
-from keras.layers.recurrent import GRU, GRUCell, RNN
-from keras.layers.wrappers import Bidirectional
-from keras.utils.generic_utils import has_arg, serialize_keras_object
+from tensorflow.keras import backend as K
+from tensorflow.keras import constraints, initializers, regularizers
+from tensorflow.keras.layers import InputSpec, Layer
+from tensorflow.python.keras.layers.recurrent import _generate_dropout_mask
+from tensorflow.python.keras.layers.recurrent import GRU, GRUCell, RNN
+from tensorflow.keras.layers import Bidirectional
+from tensorflow.keras.utils import serialize_keras_object
+from tensorflow.python.keras.utils.generic_utils import has_arg
 
 from .activations import get_activation
 
@@ -75,7 +76,7 @@ class GRUDCell(GRUCell):
         # Validate the shape of the input first. Borrow the idea from `_Merge`.
         if not isinstance(input_shape, list) or len(input_shape) != 3:
             raise ValueError('GRU-D be called on a list of 3 inputs (x, m, s).')
-        if input_shape[0] != input_shape[1]:
+        if input_shape[0].as_list() != input_shape[1].as_list():
             raise ValueError('The input x and the masking m should have '
                              'the same input shape, but got '
                              '{} and {}.'.format(input_shape[0], input_shape[1]))
@@ -151,6 +152,18 @@ class GRUDCell(GRUCell):
             self.masking_kernel_z = self.masking_kernel[:, :self.units]
             self.masking_kernel_r = self.masking_kernel[:, self.units:self.units * 2]
             self.masking_kernel_h = self.masking_kernel[:, self.units * 2:]
+
+        # This bit isn't defined anymore in tf.keras's implementation, but it used to be in vanilla keras
+        self.kernel_z = self.kernel[:, :self.units]
+        self.kernel_r = self.kernel[:, self.units:self.units * 2]
+        self.kernel_h = self.kernel[:, self.units * 2:]
+        self.recurrent_kernel_z = self.recurrent_kernel[:, :self.units]
+        self.recurrent_kernel_r = self.recurrent_kernel[:, self.units:self.units * 2]
+        self.recurrent_kernel_h = self.recurrent_kernel[:, self.units * 2:]
+        self.input_bias = self.bias
+        self.input_bias_z = self.input_bias[:self.units]
+        self.input_bias_r = self.input_bias[self.units: self.units * 2]
+        self.input_bias_h = self.input_bias[self.units * 2:]
 
         self.true_input_dim = input_dim
         self.built = True

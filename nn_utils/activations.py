@@ -1,8 +1,8 @@
 from __future__ import absolute_import, division, print_function
 
-from keras import activations
-from keras import backend as K
-from keras.utils.generic_utils import custom_object_scope
+from tensorflow.keras import activations
+from tensorflow.keras import backend as K
+from tensorflow.keras.utils import custom_object_scope
 
 
 __all__ = ['exp_relu', 'get_activation']

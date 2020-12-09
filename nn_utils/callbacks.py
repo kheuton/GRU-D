@@ -5,8 +5,8 @@ from __future__ import absolute_import, division, print_function
 from datetime import datetime
 import os
 
-from keras import backend as K
-from keras.callbacks import ModelCheckpoint, TensorBoard
+from tensorflow.keras import backend as K
+from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard
 import numpy as np
 
 
