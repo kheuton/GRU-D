@@ -154,16 +154,17 @@ class GRUDCell(GRUCell):
             self.masking_kernel_h = self.masking_kernel[:, self.units * 2:]
 
         # This bit isn't defined anymore in tf.keras's implementation, but it used to be in vanilla keras
-        self.kernel_z = self.kernel[:, :self.units]
-        self.kernel_r = self.kernel[:, self.units:self.units * 2]
-        self.kernel_h = self.kernel[:, self.units * 2:]
-        self.recurrent_kernel_z = self.recurrent_kernel[:, :self.units]
-        self.recurrent_kernel_r = self.recurrent_kernel[:, self.units:self.units * 2]
-        self.recurrent_kernel_h = self.recurrent_kernel[:, self.units * 2:]
-        self.input_bias = self.bias
-        self.input_bias_z = self.input_bias[:self.units]
-        self.input_bias_r = self.input_bias[self.units: self.units * 2]
-        self.input_bias_h = self.input_bias[self.units * 2:]
+        # GRU-D relied on these variables, but the new keras doesnt use em
+        #self.kernel_z = self.kernel[:, :self.units]
+        #self.kernel_r = self.kernel[:, self.units:self.units * 2]
+        #self.kernel_h = self.kernel[:, self.units * 2:]
+        #self.recurrent_kernel_z = self.recurrent_kernel[:, :self.units]
+        #self.recurrent_kernel_r = self.recurrent_kernel[:, self.units:self.units * 2]
+        #self.recurrent_kernel_h = self.recurrent_kernel[:, self.units * 2:]
+        #self.input_bias = self.bias
+        #self.input_bias_z = self.input_bias[:self.units]
+        #self.input_bias_r = self.input_bias[self.units: self.units * 2]
+        #self.input_bias_h = self.input_bias[self.units * 2:]
 
         self.true_input_dim = input_dim
         self.built = True
@@ -288,17 +289,17 @@ class GRUDCell(GRUCell):
             h_tm1_z, h_tm1_r = h_tm1d, h_tm1d
 
         # Get z_t, r_t, hh_t
-        z_t = K.dot(x_z, self.kernel_z) + K.dot(h_tm1_z, self.recurrent_kernel_z)
-        r_t = K.dot(x_r, self.kernel_r) + K.dot(h_tm1_r, self.recurrent_kernel_r)
-        hh_t = K.dot(x_h, self.kernel_h)
+        z_t = K.dot(x_z, self.kernel[:, :self.units]) + K.dot(h_tm1_z, self.recurrent_kernel[:, :self.units])
+        r_t = K.dot(x_r, self.kernel[:, self.units:self.units * 2]) + K.dot(h_tm1_r, self.recurrent_kernel[:, self.units:self.units * 2])
+        hh_t = K.dot(x_h, self.kernel[:, self.units * 2:])
         if self.feed_masking:
             z_t += K.dot(m_z, self.masking_kernel_z)
             r_t += K.dot(m_r, self.masking_kernel_r)
             hh_t += K.dot(m_h, self.masking_kernel_h)
         if self.use_bias:
-            z_t = K.bias_add(z_t, self.input_bias_z)
-            r_t = K.bias_add(r_t, self.input_bias_r)
-            hh_t = K.bias_add(hh_t, self.input_bias_h)
+            z_t = K.bias_add(z_t, self.input_bias[:self.units])
+            r_t = K.bias_add(r_t, self.input_bias[self.units: self.units * 2])
+            hh_t = K.bias_add(hh_t, self.input_bias[self.units * 2:])
         z_t = self.recurrent_activation(z_t)
         r_t = self.recurrent_activation(r_t)
         
@@ -306,7 +307,7 @@ class GRUDCell(GRUCell):
             h_tm1_h = r_t * h_tm1d * rec_dp_mask[2]
         else:
             h_tm1_h = r_t * h_tm1d        
-        hh_t = self.activation(hh_t + K.dot(h_tm1_h, self.recurrent_kernel_h))
+        hh_t = self.activation(hh_t + K.dot(h_tm1_h, self.recurrent_kernel[:, self.units * 2:]))
 
         # get h_t
         h_t = z_t * h_tm1 + (1 - z_t) * hh_t
