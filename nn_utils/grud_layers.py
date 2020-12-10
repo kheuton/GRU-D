@@ -297,9 +297,9 @@ class GRUDCell(GRUCell):
             r_t += K.dot(m_r, self.masking_kernel_r)
             hh_t += K.dot(m_h, self.masking_kernel_h)
         if self.use_bias:
-            z_t = K.bias_add(z_t, self.input_bias[:self.units])
-            r_t = K.bias_add(r_t, self.input_bias[self.units: self.units * 2])
-            hh_t = K.bias_add(hh_t, self.input_bias[self.units * 2:])
+            z_t = K.bias_add(z_t, self.bias[:self.units])
+            r_t = K.bias_add(r_t, self.bias[self.units: self.units * 2])
+            hh_t = K.bias_add(hh_t, self.bias[self.units * 2:])
         z_t = self.recurrent_activation(z_t)
         r_t = self.recurrent_activation(r_t)
         
