@@ -14,9 +14,9 @@ from nn_utils.layers import ExternalMasking
 
 __all__ = ['create_grud_model', 'load_grud_model']
 
-
 def create_grud_model(input_dim, recurrent_dim, hidden_dim,
                       output_dim, output_activation,
+                      pfac,
                       predefined_model=None,
                       use_bidirectional_rnn=False, use_batchnorm=False, **kwargs):
 
@@ -33,34 +33,34 @@ def create_grud_model(input_dim, recurrent_dim, hidden_dim,
     input_s = ExternalMasking()([input_s, input_m])
     input_m = Masking()(input_m)
     # GRU layers
-    grud_layer = GRUD(units=recurrent_dim[0],
+    grud_layer = pfac(GRUD(units=recurrent_dim[0],
                       return_sequences=len(recurrent_dim) > 1,
                       activation='sigmoid',
                       dropout=0.3,
                       recurrent_dropout=0.3,
                       **kwargs
-                     )
+                     ))
     if use_bidirectional_rnn:
         grud_layer = Bidirectional_for_GRUD(grud_layer)
     x = grud_layer([input_x, input_m, input_s])
     for i, rd in enumerate(recurrent_dim[1:]):
-        gru_layer = GRU(units=rd,
+        gru_layer = pfac(GRU(units=rd,
                         return_sequences=i < len(recurrent_dim) - 2,
                         dropout=0.3,
                         recurrent_dropout=0.3,
-                       )
+                       ))
         if use_bidirectional_rnn:
             gru_layer = Bidirectional(gru_layer)
         x = gru_layer(x)
     # MLP layers
     x = Dropout(.3)(x)
     for hd in hidden_dim:        
-        x = Dense(units=hd,
-                  kernel_regularizer=l2(1e-4))(x)
+        x = pfac(Dense(units=hd,
+                       kernel_regularizer=l2(1e-4)))(x)
         if use_batchnorm:
             x = BatchNormalization()(x)
         x = Activation('relu')(x)
-    x = Dense(output_dim, activation=output_activation)(x)
+    x = pfac(Dense(output_dim, activation=output_activation))(x)
     output_list = [x]
 
     model = Model(inputs=input_list, outputs=output_list)
